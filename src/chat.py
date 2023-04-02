@@ -15,12 +15,46 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+messages = {}
 
-def chat_with_gpt(chat_id, text_message):
-    logging.info(chat_id + " start chat")
-    chat_property = build_property(chat_id, text_message)
-    chat_response = send_chat(chat_id, chat_property)
-    logging.info(chat_id + " end chat \n" + chat_response)
+
+def add_message(user_id, message):
+    user_message = messages.get(user_id, [])
+    user_message.append(message)
+    messages[user_id] = user_message
+
+
+def add_start_message(user_id, message):
+    logging.info("start add new start message ")
+    start_message = "\nHuman: " + message
+    add_message(user_id, start_message)
+    logging.info("end add new start message ")
+
+
+def add_end_message(user_id, message):
+    logging.info("start add new response message ")
+    end_message = "\nAI: " + message
+    add_message(user_id, end_message)
+    logging.info("end add new response message ")
+
+
+def get_history_message(user_id):
+    user_message = messages.get(user_id, [])
+    return user_message
+
+
+def clear_history(user_id):
+    messages[user_id] = []
+
+
+def chat_with_gpt(user_id, chat_id, text_message):
+    logging.info(user_id + " start chat  " + chat_id)
+    history = get_history_message(user_id)
+    chat_property, max_tokens = build_property(chat_id, text_message, history)
+    chat_response = send_chat(chat_id, chat_property, max_tokens=max_tokens)
+    add_start_message(user_id, text_message)
+    add_end_message(user_id, chat_response)
+    logging.info(user_id + " end chat" + chat_id + " with  response \n" + chat_response)
     return chat_response
 
 
@@ -54,5 +88,5 @@ def build_bot_voice_response(chat_id, response_message):
 if __name__ == '__main__':
     chat_message_id = "chat:" + str(1)
     message = "こんにちは"
-    chat_message = chat_with_gpt(chat_message_id, message)
+    chat_message = chat_with_gpt("user:01", chat_message_id, message)
     logging.info("message is " + chat_message)

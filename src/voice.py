@@ -27,6 +27,8 @@ def text_to_speech_azure(chat_id, text, voice_name=default_voice_name):
     logging.info(chat_id + " end speech to " + voice_file)
     return voice_file
 
+def speech_to_text():
+    pass
 
 if __name__ == '__main__':
     text = "コンバンワ！ 今日のことをどう思いますか"
