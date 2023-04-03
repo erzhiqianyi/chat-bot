@@ -16,6 +16,15 @@ logging.basicConfig(
 )
 
 messages = {}
+context = {}
+
+
+def enable_context(user_id):
+    context[user_id] = True
+
+
+def disable_context(user_id):
+    context[user_id] = False
 
 
 def add_message(user_id, message):
@@ -47,9 +56,21 @@ def clear_history(user_id):
     messages[user_id] = []
 
 
+def get_context(user_id):
+    return context.get(user_id, False)
+
+
+def get_chat_history(user_id):
+    is_context_enable = get_context(user_id)
+    logging.info(user_id + " context status " + str(is_context_enable))
+    history = get_chat_history(user_id) if is_context_enable else []
+    history = history[-30:]
+    return history
+
+
 def chat_with_gpt(user_id, chat_id, text_message):
     logging.info(user_id + " start chat  " + chat_id)
-    history = get_history_message(user_id)
+    history = get_chat_history(user_id)
     chat_property, max_tokens = build_property(chat_id, text_message, history)
     chat_response = send_chat(chat_id, chat_property, max_tokens=max_tokens)
     add_start_message(user_id, text_message)

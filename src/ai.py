@@ -62,7 +62,6 @@ def build_property(chat_id, human, history=[]):
     The assistant is helpful, creative, clever,  very friendly and a little humor. """
     restart_sequence = "\nHuman: "
     start_sequence = "\nAI:"
-    history = history[-30:]
     history_message = " ".join(history)
     prompt = prompt + format_prompt + history_message + restart_sequence + human + start_sequence
     max_tokens = calculate_token(history)

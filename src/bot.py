@@ -26,11 +26,26 @@ def log_chat_info(update: Update, message_type):
 
 
 async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    log_chat_info(update, "clear")
     user_id = str(update.effective_user.id)
     history = get_history_message(user_id)
     history_message = "\n".join(history)
     clear_history(user_id)
     message = "history is\n" + history_message + "clear success"
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+
+
+async def enable_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    log_chat_info(update, "enable_context")
+    user_id = str(update.effective_user.id)
+    message = "enable context success"
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+
+
+async def disable_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    log_chat_info(update, "disable_context")
+    user_id = str(update.effective_user.id)
+    message = "disable context success"
     await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
 
 
@@ -72,11 +87,15 @@ if __name__ == '__main__':
     application = ApplicationBuilder().token(token).read_timeout(20) \
         .get_updates_read_timeout(20).connect_timeout(20) \
         .pool_timeout(20).build()
+    enable_context_handler = CommandHandler('enable', enable_context)
+    disable_context_handler = CommandHandler('disable', disable_context)
     clear_handler = CommandHandler('clear', clear)
     text_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), process_text_message)
     audio_handler = MessageHandler(filters.VOICE, process_voice_message)
 
     application.add_handler(clear_handler)
+    application.add_handler(enable_context_handler)
+    application.add_handler(disable_context_handler)
     application.add_handler(text_handler)
     application.add_handler(audio_handler)
 
