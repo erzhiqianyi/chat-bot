@@ -19,12 +19,13 @@ messages = {}
 context = {}
 
 
-def enable_context(user_id):
+def enable_chat_context(user_id):
     context[user_id] = True
 
 
-def disable_context(user_id):
+def disable_chat_context(user_id):
     context[user_id] = False
+    clear_history(user_id)
 
 
 def add_message(user_id, message):
@@ -68,13 +69,19 @@ def get_chat_history(user_id):
     return history
 
 
+def add_history(user_id, text_message, chat_response):
+    is_context_enable = get_context(user_id)
+    if is_context_enable:
+        add_start_message(user_id, text_message)
+        add_end_message(user_id, chat_response)
+
+
 def chat_with_gpt(user_id, chat_id, text_message):
     logging.info(user_id + " start chat  " + chat_id)
     history = get_chat_history(user_id)
     chat_property, max_tokens = build_property(chat_id, text_message, history)
     chat_response = send_chat(chat_id, chat_property, max_tokens=max_tokens)
-    add_start_message(user_id, text_message)
-    add_end_message(user_id, chat_response)
+    add_history(user_id, text_message, chat_response)
     logging.info(user_id + " end chat" + chat_id + " with  response \n" + chat_response)
     return chat_response
 

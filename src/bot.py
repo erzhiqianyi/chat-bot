@@ -6,7 +6,7 @@ from telegram import Update
 from telegram.ext import filters, ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler
 
 from chat import chat_with_gpt, format_bot_text_response, build_bot_voice_response, transcribe_bot_voice, clear_history, \
-    get_history_message
+    get_history_message,enable_chat_context,disable_chat_context
 
 load_dotenv()
 token = os.getenv("telegram_token")
@@ -35,16 +35,18 @@ async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
 
 
-async def enable_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def process_enable_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
     log_chat_info(update, "enable_context")
     user_id = str(update.effective_user.id)
+    enable_chat_context(user_id)
     message = "enable context success"
     await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
 
 
-async def disable_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def process_disable_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
     log_chat_info(update, "disable_context")
     user_id = str(update.effective_user.id)
+    disable_chat_context(user_id)
     message = "disable context success"
     await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
 
