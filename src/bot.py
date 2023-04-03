@@ -6,7 +6,7 @@ from telegram import Update
 from telegram.ext import filters, ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler
 
 from chat import chat_with_gpt, format_bot_text_response, build_bot_voice_response, transcribe_bot_voice, clear_history, \
-    get_history_message,enable_chat_context,disable_chat_context
+    get_history_message, enable_chat_context, disable_chat_context
 
 load_dotenv()
 token = os.getenv("telegram_token")
@@ -89,8 +89,8 @@ if __name__ == '__main__':
     application = ApplicationBuilder().token(token).read_timeout(20) \
         .get_updates_read_timeout(20).connect_timeout(20) \
         .pool_timeout(20).build()
-    enable_context_handler = CommandHandler('enable', enable_context)
-    disable_context_handler = CommandHandler('disable', disable_context)
+    enable_context_handler = CommandHandler('enable', process_enable_context)
+    disable_context_handler = CommandHandler('disable', process_disable_context)
     clear_handler = CommandHandler('clear', clear)
     text_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), process_text_message)
     audio_handler = MessageHandler(filters.VOICE, process_voice_message)
