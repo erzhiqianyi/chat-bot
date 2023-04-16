@@ -5,8 +5,7 @@ from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import filters, ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler
 
-from chat import chat_with_gpt, format_bot_text_response, build_bot_voice_response, transcribe_bot_voice, clear_history, \
-    get_history_message, enable_chat_context, disable_chat_context
+from chat import *
 
 load_dotenv()
 token = os.getenv("telegram_token")
@@ -28,11 +27,38 @@ def log_chat_info(update: Update, message_type):
 async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
     log_chat_info(update, "clear")
     user_id = str(update.effective_user.id)
-    history = get_history_message(user_id)
-    history_message = "\n".join(history)
+    history = show_history_message(user_id)
     clear_history(user_id)
-    message = "history is\n" + history_message + "clear success"
+    message = "history is\n" + history + "clear success"
     await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+
+
+async def read_aloud(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    log_chat_info(update, "read aloud")
+    message = "start read aloud "
+    user_id = str(update.effective_user.id)
+    change_mode(user_id, mode_read_aloud)
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+
+
+async def normal(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    log_chat_info(update, "normal")
+    user_id = str(update.effective_user.id)
+    message = "assistant mode"
+    change_mode(user_id, mode_default)
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+
+
+async def clear_read_aloud(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = log_chat_info(update, "clear read aloud")
+    user_id = str(update.effective_user.id)
+    history = show_history_message(user_id)
+    clear_history(user_id)
+    message = "your  read  aloud content is \n" + history
+    history = history.replace(kimi, "").replace(ai,"")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+    voice_message = build_bot_voice_response(chat_id, history)
+    await context.bot.send_voice(chat_id=update.effective_chat.id, voice=voice_message)
 
 
 async def process_enable_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -92,12 +118,18 @@ if __name__ == '__main__':
     enable_context_handler = CommandHandler('enable', process_enable_context)
     disable_context_handler = CommandHandler('disable', process_disable_context)
     clear_handler = CommandHandler('clear', clear)
+    read_aloud_handler = CommandHandler('read', read_aloud)
+    clear_read_aloud_handler = CommandHandler('clearread', clear_read_aloud)
+    normal_mode_handler = CommandHandler('normal', normal)
     text_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), process_text_message)
     audio_handler = MessageHandler(filters.VOICE, process_voice_message)
 
     application.add_handler(clear_handler)
     application.add_handler(enable_context_handler)
     application.add_handler(disable_context_handler)
+    application.add_handler(read_aloud_handler)
+    application.add_handler(clear_read_aloud_handler)
+    application.add_handler(normal_mode_handler)
     application.add_handler(text_handler)
     application.add_handler(audio_handler)
 

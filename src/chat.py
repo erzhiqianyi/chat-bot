@@ -15,8 +15,36 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+mode_default = "Assistant"
+mode_customize = "Customize"
+mode_read_aloud = "ReadAloud"
+
 messages = {}
 context = {}
+mode = {}
+start_sequence = "\nHuman: "
+end_sequence = "\nAI: "
+kimi = "君:"
+ai = "AI:"
+def repeat_chat(user_id, chat_id, text_message):
+    add_history(user_id, text_message, None)
+    logging.info(user_id + " end chat" + chat_id + " repeat \n")
+    return text_message
+
+
+def gpt_chat(user_id, chat_id, text_message):
+    history = get_chat_history(user_id)
+    chat_property, max_tokens = build_property(chat_id, text_message, history)
+    chat_response = send_chat(chat_id, chat_property, max_tokens=max_tokens)
+    add_history(user_id, text_message, chat_response)
+    logging.info(user_id + " end chat" + chat_id + " with  response \n" + chat_response)
+    return chat_response
+
+
+mode_processor = {
+    mode_default: gpt_chat,
+    mode_read_aloud: repeat_chat
+}
 
 
 def enable_chat_context(user_id):
@@ -36,16 +64,24 @@ def add_message(user_id, message):
 
 def add_start_message(user_id, message):
     logging.info("start add new start message ")
-    start_message = "\nHuman: " + message
+    start_message = start_sequence + message
     add_message(user_id, start_message)
     logging.info("end add new start message ")
 
 
 def add_end_message(user_id, message):
     logging.info("start add new response message ")
-    end_message = "\nAI: " + message
-    add_message(user_id, end_message)
+    if message:
+        end_message = end_sequence + message
+        add_message(user_id, end_message)
     logging.info("end add new response message ")
+
+
+def show_history_message(user_id):
+    history_message = get_history_message(user_id)
+    history_message = "\n".join(history_message)
+    history_message = history_message.replace(start_sequence,kimi).replace(end_sequence,ai)
+    return history_message
 
 
 def get_history_message(user_id):
@@ -61,28 +97,31 @@ def get_context(user_id):
     return context.get(user_id, False)
 
 
+def get_mode(user_id):
+    return mode.get(user_id, mode_default)
+
+
+def change_mode(user_id, mode_name=mode_default):
+    mode[user_id] = mode_name
+
+
 def get_chat_history(user_id):
     is_context_enable = get_context(user_id)
     logging.info(user_id + " context status " + str(is_context_enable))
-    history = get_chat_history(user_id) if is_context_enable else []
-    history = history[-30:]
+    history = get_history_message(user_id) if is_context_enable else []
     return history
 
 
 def add_history(user_id, text_message, chat_response):
-    is_context_enable = get_context(user_id)
-    if is_context_enable:
-        add_start_message(user_id, text_message)
-        add_end_message(user_id, chat_response)
+    add_start_message(user_id, text_message)
+    add_end_message(user_id, chat_response)
 
 
 def chat_with_gpt(user_id, chat_id, text_message):
-    logging.info(user_id + " start chat  " + chat_id)
-    history = get_chat_history(user_id)
-    chat_property, max_tokens = build_property(chat_id, text_message, history)
-    chat_response = send_chat(chat_id, chat_property, max_tokens=max_tokens)
-    add_history(user_id, text_message, chat_response)
-    logging.info(user_id + " end chat" + chat_id + " with  response \n" + chat_response)
+    mode = get_mode(user_id)
+    logging.info(user_id + " start chat  " + chat_id + " in " + mode)
+    processor = mode_processor.get(mode)
+    chat_response = processor(user_id, chat_id, text_message)
     return chat_response
 
 
